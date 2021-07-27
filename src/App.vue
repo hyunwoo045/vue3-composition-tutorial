@@ -1,4 +1,4 @@
-<template>
+<!-- <template>
   <h1 @click="increase">
     {{ count }} / {{ doubleCount }}
   </h1>
@@ -57,3 +57,29 @@ h1 {
   margin: 10px;
 }
 </style>
+
+-->
+
+<template>
+  <MyBtn
+    class="hwoo"
+    style="color: red;"
+    color="#ff0000"
+    @hello="log">
+    Apple
+  </MyBtn>
+</template>
+
+<script>
+import MyBtn from '~/components/MyBtn'
+export default {
+  components: {
+    MyBtn
+  },
+  methods: {
+    log() {
+      console.log('Hello World!')
+    }
+  }
+}
+</script>

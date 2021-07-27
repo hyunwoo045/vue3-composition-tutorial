@@ -217,3 +217,134 @@ setup() {
 - 따라서 created(), beforeCreate() 에 작성되는 모든 코드는 setup 함수 내부에 직접 작성하면 된다.
 
 <br/>
+
+## Props 와 Context
+
+아래의 구성을 Composition API 로 활용해보고자 한다.
+
+```html
+<!-- App.vue -->
+<template>
+  <MyBtn class="hwoo" style="color: red;" color="#ff0000" @hello="log">
+    Apple
+  </MyBtn>
+</template>
+
+<script>
+  import MyBtn from "~/components/MyBtn";
+  export default {
+    components: {
+      MyBtn,
+    },
+    methods: {
+      log() {
+        console.log("Hello World!");
+      },
+    },
+  };
+</script>
+```
+
+```html
+<!-- MyBtn.vue -->
+<template>
+  <div v-bind="$attrs" class="btn" @click="hello">
+    <slot></slot>
+  </div>
+</template>
+
+<script>
+  export default {
+    inheritAttrs: false,
+    props: {
+      color: {
+        type: String,
+        default: "gray",
+      },
+    },
+    emits: ["hello"],
+    mounted() {
+      console.log(this.color);
+      console.log(this.$attrs);
+    },
+    methods: {
+      hello() {
+        this.$emit("hello");
+      },
+    },
+  };
+</script>
+```
+
+- setup() 함수를 선언한다. setup 함수 내에서는 컴포넌트에 연결한 props와 상속받는 객체를 사용할 수 없으므로, 매개변수로 `props` 와 `context` 를 전달하여 사용할 수 있도록 한다.
+- `props` 는 위에서 지정한 props 옵션과 연결된다.
+- `context` 는 상속받는 객체들이다. 현재 코드에서는 `attrs` 에 대한 내용과 `emit` 에 대한 내용이 저장되어 있다.
+
+setup 함수에서 context 를 출력한 결과 -
+
+```
+onSetup:
+{expose: ƒ}
+attrs: Proxy
+emit: (event, ...args) => instance.emit(event, ...args)
+expose: exposed => {…}
+slots: (...)
+get attrs: ƒ attrs()
+get emit: emit() { return (event, ...args) => {…}
+get slots: ƒ slots()
+__proto__: Object
+```
+
+- mounted() 를 수정한다.
+- 주의) `$attr` 을 setup 내부에서 사용할 때에는 context 의 속성으로서 호출해야하고, 이 때는 `$` (dollar sign) 을 사용하지 않는다.
+
+```javascript
+import { onMounted } from 'vue';
+export default {
+  inheritAttrs: false,
+  props: {
+    color: {
+      type: String,
+      default: "gray",
+    },
+  },
+  emits: ["hello"],
+  setup() {
+    onMounted(() => {
+      console.log(props.color)
+      console.log(context.attr)
+    }
+  }
+}
+```
+
+- methods 옵션을 옮겨 넣는다.
+- emit 또한 context 의 속성으로서 호출되는 것이고 $ 를 넣지 않는다.
+- hello 를 사용할 수 있도록 setup 함수에서 반환해준다.
+
+```javascript
+import { onMounted } from 'vue';
+export default {
+  inheritAttrs: false,
+  props: {
+    color: {
+      type: String,
+      default: "gray",
+    },
+  },
+  emits: ["hello"],
+  setup() {
+    function hello() {
+      context.emit('hello')
+    }
+    onMounted(() => {
+      console.log(props.color)
+      console.log(context.attr)
+    }
+
+    return {
+      hello
+    }
+  }
+}
+```
